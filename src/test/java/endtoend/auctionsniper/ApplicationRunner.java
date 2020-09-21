@@ -1,12 +1,14 @@
 package endtoend.auctionsniper;
 
 import auctionsniper.Main;
+import auctionsniper.ui.MainWindow;
 
 import static endtoend.auctionsniper.FakeAuctionServer.XMPP_HOSTNAME;
 
 public class ApplicationRunner {
     public static final String SNIPER_ID = "sniper";
     public static final String SNIPER_PASSWORD = "sniper";
+    public static final String SNIPER_XMPP_ID = SNIPER_ID + "@" + XMPP_HOSTNAME + "/Auction";
     private static final String STATUS_JOINING = "Joining";
     private static final String STATUS_LOST = "Lost";
     private AuctionSniperDriver driver;
@@ -36,5 +38,9 @@ public class ApplicationRunner {
         if (driver != null) {
             driver.dispose();
         }
+    }
+
+    public void hasShownSniperIsBidding() {
+        driver.showSniperStatus(MainWindow.STATUS_BIDDING);
     }
 }

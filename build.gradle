@@ -15,4 +15,6 @@ dependencies {
 
     testCompile 'junit:junit:4.12'
     testCompile 'com.googlecode.windowlicker:windowlicker-swing:r268'
+    testCompile 'org.jmock:jmock:2.6.0'
+    testCompile 'org.jmock:jmock-junit4:2.6.0'
 }
