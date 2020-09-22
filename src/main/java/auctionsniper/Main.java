@@ -9,7 +9,9 @@ import javax.swing.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
-public class Main implements SniperListener {
+import static java.lang.String.format;
+
+public class Main {
     public static final String JOIN_COMMAND_FORMAT = "SOLVersion: 1.1; Command: JOIN;";
     public static final String BID_COMMAND_FORMAT = "SOLVersion: 1.1; Command: BID; Price: %d;";
     private static final int ARG_HOSTNAME = 0;
@@ -46,19 +48,20 @@ public class Main implements SniperListener {
     }
 
     private void joinAuction(XMPPConnection connection, String itemId) throws XMPPException {
-        Auction nullAuction = new Auction() {
-            @Override
-            public void bid(int price) {
-
-            }
-        };
         disconnectWhenUICloses(connection);
         Chat chat = connection.getChatManager().createChat(
                 auctionId(itemId, connection),
-                new AuctionMessageTranslator(new AuctionSniper(nullAuction, this))
+                null
         );
         this.notToBeGCd = chat;
-        chat.sendMessage(JOIN_COMMAND_FORMAT);
+
+        Auction auction = new XMPPAuction(chat);
+        chat.addMessageListener(
+                new AuctionMessageTranslator(
+                        connection.getUser(),
+                        new AuctionSniper(auction, new SniperStateDisplayer()))
+        );
+        auction.join();
     }
 
     private void disconnectWhenUICloses(XMPPConnection connection) {
@@ -71,7 +74,7 @@ public class Main implements SniperListener {
     }
 
     private static String auctionId(String itemId, XMPPConnection connection) {
-        return String.format(AUCTION_ID_FORMAT, itemId,
+        return format(AUCTION_ID_FORMAT, itemId,
                 connection.getServiceName());
     }
 
@@ -83,18 +86,30 @@ public class Main implements SniperListener {
         return connection;
     }
 
-    @Override
-    public void sniperLost() {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                ui.showStatus(MainWindow.STATUS_LOST);
-            }
-        });
-    }
 
-    @Override
-    public void sniperBidding() {
+    public class SniperStateDisplayer implements SniperListener {
+        @Override
+        public void sniperLost() {
+            showStatus(MainWindow.STATUS_LOST);
+        }
 
+        @Override
+        public void sniperBidding() {
+            showStatus(MainWindow.STATUS_BIDDING);
+        }
+
+        @Override
+        public void sniperWinning() {
+            showStatus(MainWindow.STATUS_WINNING);
+        }
+
+        private void showStatus(final String status) {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    ui.showStatus(status);
+                }
+            });
+        }
     }
 }
